@@ -1,0 +1,6 @@
+---
+- include: mariadb_connector_src.yml
+  when: mariadb_connector_src_enabled 
+  become: yes
+  become_user: devops
+  tags: [mariadb_connector_src]

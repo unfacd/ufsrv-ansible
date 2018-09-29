@@ -1,0 +1,85 @@
+server_id="0" --not in use
+
+ufsrv_geogroup=3
+
+server_cpu_affinity=-1
+main_listener_port={{ ufsrv_node_port| default(80, true) }}
+main_listener_bind_address="{{ ufsrv_host| default('localhost', true) }}"
+command_console_port=19700
+command_console_bind_address="{{ ufsrv_host| default('localhost', true) }}"
+ufsrvmsgqueue_bind_address="{{ ufsrv_msgq_host| default('redis-msgq', true)  }}"
+ufsrvmsgqueue_port={{ ufsrv_msgq_port| default(6379, true) }}
+
+ufsrv_db_backend={
+  port={{ ufsrv_db_port | default('3636') }},
+  address="{{ ufsrv_db_host | default('localhost', true) }}",
+  username="{{ ufsrv_db_user | default('ufsrv', true) }}",
+  password="{{ ufsrv_db_ufsrv_password | default('ufsrv', true) }}"
+}
+
+ufsrv_geoip_backend = {
+  address="{{ ufsrv_geoip_host | default('ufsrv-geoip', true) }}", 
+  port={{ ufsrv_geoip_port | default(19800, true) }}
+}
+
+ufsrv_user_timeouts={
+                      unauthenticated_timeout=60,
+                      connected_timeout=120,
+                      suspended_timeout=0, --60
+                      locationless_timeout=0 --300
+                    }
+
+ufsrv_buffer_sizes={
+                      incoming_buffer_size=10240,
+                      outgoing_buffer_size=1024,
+                      holding_buffer_size=1024
+                    }
+
+-- console
+ufsrv_ssl={
+            location="",
+            certificate="ufsrv_certificate_key.pem",
+            key="ufsrv_certificate_key.pem"
+          }
+ufsrv_ssl_command_console={required=1, client_certifcate=1}
+
+-- client
+ufsrv_user_ssl={
+            location="",
+            certificate="ufsrv_certificate_key.pem",
+            key="ufsrv_certificate_key.pem",
+            required=1
+}
+
+ufsrv_stats_backend={
+                                address="{{ ufsrv_stats_address | default('localhost', true) }}", 
+                                port={{ ufsrv_stats_port | default(8125, true) }}
+}
+
+--data persistance backend
+ufsrv_persistance_backend={ address="{{ ufsrv_redis_session_host | default('redis-session', true) }}",
+                            port={{ ufsrv_redis_session_port | default(6379, true) }},
+                            mode="tcp",
+                            timeout=500000
+}
+
+--data persistance backend
+ufsrv_cache_backend_usrmsg={ address="{{ ufsrv_redis_usrmsg_host | default('redis-usrmsg', true) }}",
+                            port={{ ufsrv_redis_usrmsg_port | default(6379, true) }},
+                            mode="tcp",
+                            timeout=500000
+}
+
+--data persistance backend
+ufsrv_cache_backend_fence={ address="{{ ufsrv_redis_fence_host | default('redis-fence', true) }}",
+                            port={{ ufsrv_redis_fence_port | default(6379, true) }},
+                            mode="tcp",
+                            timeout=500000
+}
+
+--task workers thread pools
+ufsrv_workers_thread_pool={{ ufsrv_config.ufsrv_workers_thread_pool | default(3, true) }}
+
+--how many workers to spwn to service client sessions
+session_workers_thread_pool={{ ufsrv_config.session_workers_thread_pool | default(2, true) }}
+

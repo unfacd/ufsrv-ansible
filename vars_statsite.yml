@@ -1,0 +1,6 @@
+statsite_conf_dir: '/opt/statsite/etc'
+statsite_sink_dir: '/opt/statsite/bin'
+#ip needs to be updated witha actual stat backend
+statsite_stream_cmd: 'python /opt/statsite/bin/graphite.py enter_ip 2003 statsite'
+statsite_params:
+  - '-f {{ statsite_conf_dir }}/statsite.conf'

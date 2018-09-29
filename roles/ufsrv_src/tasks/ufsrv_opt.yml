@@ -1,0 +1,12 @@
+- name: Ensure download directory is present
+  file: path={{ tmp_download_dir }} state=directory
+
+- name: Ensure target install directory '/opt/ufsrv' is present
+  file: path={{ base_install_dir }}/{{ ufsrv_server_type }} state=directory
+
+- name: Ensure target install directory 'etc' is present
+  file: path={{ base_install_dir }}/{{ ufsrv_server_type }}/etc state=directory
+
+- name: Ensure target install directory 'bin' is present
+  file: path={{ base_install_dir }}/{{ ufsrv_server_type }}/bin state=directory
+

@@ -1,0 +1,32 @@
+---
+- hosts: all
+  remote_user: root
+  become: yes
+  become_user: root
+  gather_facts: false
+  pre_tasks:
+    - raw: apt-get update
+    - raw: sudo apt-get -y install python
+    - name: Turning on facts gathering...
+      action: setup
+
+  #vault managed
+  vars_files:
+    - vars_statsite.yml
+
+  vars:
+    groupname_master: "{{ ufsrv_websock_group_name }}"
+    ufsrv_port: "{{ ufsrv_websock_port }}"
+    ufsrv_node_port: "{{ ufsrv_websock_node_port }}"
+    ufsrv_host_domain: "inventory_hostname.{{ ufsrv_websock_service_domain_name }}"
+    ufsrv_host: "{{ hostvars[inventory_hostname].private_ip }}"
+    ufsrv_config:
+      ufsrv_workers_thread_pool: 3
+      session_workers_thread_pool: 2
+
+  roles:
+    - { role: bootstrap_basepackages }
+    - { role: statsite, statsite_version: '0.8.0' }
+    - { role: ufsrv_server_settings, service_domain_name: '{{ ufsrv_host_domain }}', sealoff_iptables: true, swapfile_enabled: true, swapfile_size: 1GiB } 
+    - { role: ufsrvbuild_devpackages }
+    - { role: ufsrv_src, ufsrv_instance_id: 1, build_type: 'Debug' }

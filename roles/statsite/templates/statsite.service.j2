@@ -1,0 +1,13 @@
+[Unit]
+Description=Statsite daemon service
+After=syslog.target
+
+[Service]
+ExecStart={{ base_install_dir }}/statsite/bin/statsite {{ statsite_params | join(" ") }}
+PIDFile=/var/run/statsite.pid
+Type=forking
+#ExecStop=/bin/kill -SIGTERM $MAINPID
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

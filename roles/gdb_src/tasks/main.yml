@@ -1,0 +1,6 @@
+---
+- include: gdb_src.yml
+  when: gdb_src_enabled 
+  become: yes
+  become_user: devops
+  tags: [gdb_src]

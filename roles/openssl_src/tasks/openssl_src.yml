@@ -1,0 +1,19 @@
+---
+- name: Ensure download directory is present
+  file: path={{ tmp_download_dir }} state=directory
+
+- name: Downloading OpenSSL package {{ package_version }}...
+  get_url: url={{ package_download_url }} dest={{ tmp_download_dir }}/openssl-{{ package_version }}.tar.gz
+
+- name: Unpacking OpenSSL package {{ package_version }} source files
+  shell: cd {{ tmp_download_dir }}/ && tar -xzvf openssl-{{ package_version }}.tar.gz creates={{ tmp_download_dir }}/openssl-{{ package_version }}
+
+#--fPIC need when other dynamic libs link against this installed version
+- name: Configuring and making OpenSSL...
+  shell: cd {{ tmp_download_dir }}/openssl-{{ package_version }}  && ./config --prefix={{ base_install_dir }} --openssldir={{ base_install_dir }}/{{ package_name }} -DPURIFY -fPIC && make creates={{ tmp_download_dir }}/openssl-{{ package_version }}/apps/openssl
+
+- name: Installing OpenSSL...
+  shell: cd {{ tmp_download_dir }}/openssl-{{ package_version }}  &&  make install creates={{ base_install_dir }}/openssl/bin/openssl
+
+#- name: Change file owner and group
+#  command: find {{ base_install_dir }}/{{ redis_name }}/bin -type d -exec chown {{ redis_name }}:{{ redis_name }} {} \;

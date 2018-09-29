@@ -1,0 +1,15 @@
+#check defaults for user definition
+#when problematic:
+#update user set password=PASSWORD("password") where User='ufsrv';
+#GRANT ALL ON ufsrv.* to 'ufsrv'@'%' identified by 'password';
+- name: "Creating ufsrv db user..."
+  include_role:
+    name: mysql_create_user
+
+#this requires the source to be checked out
+- name: "Creating ufsrv sql schema..."
+  mysql_db:
+    state: import
+    name: ufsrv
+    target: "{{ src_location_prefix }}/ufsrvapi/ufsrv/sql/ufsrv_schema.sql"
+  tags: ['import_schema']

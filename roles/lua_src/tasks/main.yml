@@ -1,0 +1,6 @@
+---
+- include: lua_src.yml
+  when: lua_src_enabled 
+  become: yes
+  become_user: devops
+  tags: [lua_src]

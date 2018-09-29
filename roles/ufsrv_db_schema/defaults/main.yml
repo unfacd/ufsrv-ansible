@@ -1,0 +1,14 @@
+ufsrv_db_schema_enabled: yes
+src_location_prefix: "/tmp"
+mariadb_mysql_users:
+     - name: ufsrv
+       hosts:
+         - '%'
+         - "10.1.0.0/255.255.0.0"
+         - "10.1.16.1"
+         - "10.1.16.2"
+       password: "{{ ufsrv_db_ufsrv_password }}"
+       encrypted: no
+       priv: 'ufsrv.*:ALL'
+       state: present
+       append_privs: no

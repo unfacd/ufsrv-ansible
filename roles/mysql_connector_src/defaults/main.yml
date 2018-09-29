@@ -1,0 +1,10 @@
+---
+mysql_connector_src_enabled: yes
+tmp_download_dir: "/tmp"
+base_install_dir: '/opt'
+package_name: 'mysql-connector-c'
+package_version: "6.1.11"
+#https://dev.mysql.com/downloads/
+#package_download_url: "https://dev.mysql.com/get/Downloads/Connector-C/mysql-connector-c++-8.0.12-src.tar.gz"
+package_download_url: "https://dev.mysql.com/get/Downloads/Connector-C/mysql-connector-c-{{ package_version }}-src.tar.gz"
+

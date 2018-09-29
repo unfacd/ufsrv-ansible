@@ -1,0 +1,47 @@
+---
+- name: Ensure download directory is present
+  file: path={{ tmp_download_dir }} state=directory
+
+- name: Ensure target install directory 'include' is present
+  file: path={{ base_install_dir }}/include state=directory
+
+- name: Ensure target install directory 'lib' is present
+  file: path={{ base_install_dir }}/lib state=directory
+
+- name: Downloading json-c package {{ package_version }}...
+  get_url: url={{ package_download_url }} dest={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}.tar.gz
+
+- name: Unpacking json-c package {{ package_version }} source files
+  unarchive:
+    copy: no
+    src: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}.tar.gz"
+    dest: "{{ tmp_download_dir }}/"
+
+- name:  Configuring json-c package {{ package_version }}...
+  command: chdir={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }} {{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}/configure --prefix={{ base_install_dir }}
+
+- name: Compiling json-c package {{ package_version }}... 
+  command: chdir={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }} make
+
+- name: Installing json-c package {{ package_version }}... 
+  command: chdir={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }} make install
+
+#- name: test
+ # command: cat {{ item }}
+  #register: lib_files
+  #with_fileglob: "{{ base_install_dir }}/{{ json_c_name }}/lib/*"
+
+#- name: link
+ # file:
+  #  src={{ base_install_dir }}/{{ json_c_name }}/lib/{{ item }}
+   # dest={{ base_install_dir }}//lib/{{ item }}
+    #state=link
+  #with_items: "{{ lib_files }}"
+
+- name: 'Creating soft link for include directory json-c <- json'
+  file: 
+    src={{ base_install_dir }}/{{ item.path }}/{{ package_name }}
+    dest={{ base_install_dir }}/{{ item.dest }}/json
+    state=link
+  with_items:
+    - { path: 'include', dest: 'include' }

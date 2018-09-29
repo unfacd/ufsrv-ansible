@@ -1,0 +1,11 @@
+[Unit]
+Description=Freegeoip daemon service
+After=syslog.target
+[Service]
+#WorkingDirectory=/path/to/script
+ExecStart={{ base_install_dir }}/freegeoip/freegeoip {{ freegeoip_params | join(" ") }}
+#ExecStop=/bin/kill -SIGTERM $MAINPID
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

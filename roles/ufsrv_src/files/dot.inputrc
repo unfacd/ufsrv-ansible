@@ -1,0 +1,4 @@
+#https://linux.die.net/man/3/readline
+#https://sourceware.org/gdb/onlinedocs/gdb/Readline-Init-File-Syntax.html#Readline-Init-File-Syntax
+Control-l:"shell clear\r"
+

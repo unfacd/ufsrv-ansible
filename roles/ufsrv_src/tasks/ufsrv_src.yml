@@ -1,0 +1,168 @@
+---
+- include: ufsrv_opt.yml
+
+- name: Pulling {{ package_name }} repo
+  git:
+    repo: "https://github.com/unfacd/ufsrv.git"
+    dest: "{{ tmp_download_dir }}/{{ package_name }}"
+    accept_hostkey: yes
+    clone: yes
+    version: 'origin/HEAD'
+    force: yes
+    update: yes
+  tags: ['recompile_src', 'download_src']
+
+- name: "Creating build directory for cmake"
+  file:
+    path: "{{ tmp_download_dir }}/{{ package_name }}/build" 
+    state: directory
+    owner: devops
+    group: devops
+    mode: 0775
+  tags: ['recompile_src']
+
+- name: "Installing gdbinit file..."
+  copy:
+    src: "files/gdbinit"
+    dest: "/home/devops/.gdbinit"
+    mode: 0644
+    owner: devops
+  tags: ['gdbinit']
+
+- name: "Installing .inputrc keybindings file (used by gdb)..."
+  copy:
+    src: "files/dot.inputrc"
+    dest: "/home/devops/.inputrc"
+    mode: 0644
+    owner: devops
+  tags: ['inputrc']
+
+- name: "Installing valgrind suppressions file..."
+  copy:
+    src: "files/opt/ufsrv/etc/valgrind_suppressions.supp"
+    dest: "/opt/ufsrv/etc/valgrind_suppressions.supp"
+    mode: 0644
+    owner: devops
+  tags: ['valgrind_suppress']
+
+- name: Configuring and making package...
+  shell: cd {{ tmp_download_dir }}/{{ package_name }}/build && cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE={{ build_type | default("Debug") }} && make creates={{ tmp_download_dir }}/{{ package_name }}/build/ufsrvapi
+  tags: ['recompile_src']
+
+#this is currenly disabled until Makefile is properly updated with install target
+- name: "installing package {{ package_version }}..."
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}"
+  when: 1 > 2
+  tags: ['recompile_src']
+
+#note cmake output binary ufsrvapi instead of ufsrv
+- name: "installing package {{ package_version }}..."
+  copy:
+    src: "{{ tmp_download_dir }}/{{ package_name }}/build/src/{{ item.src }}"
+    dest: "/opt/ufsrv/bin/{{ item.dest }}"
+    remote_src: yes
+    mode: 0755
+    owner: ufsrv
+  with_items:
+    - { src: 'ufsrvapi', dest: 'ufsrv' }
+  become: true
+  become_user: root
+  tags: ['recompile_src']
+
+- name: "Installing ufsrv config file..."
+  template:
+    src: "opt/ufsrv/etc/{{ ufsrv_configfile_name }}.j2"
+    dest: "/opt/ufsrv/etc/{{ ufsrv_configfile_name }}"
+    owner: ufsrv
+    group: devops
+    mode: 0640
+  become: true
+  become_user: root
+  tags: ['recompile_src', 'ufsrv_configfile']
+
+- name: configure_root | configuring devops my.cnf
+  template:
+    src: "home/devops/my.cnf.j2"
+    dest: "/home/devops/.my.cnf"
+    owner: "devops"
+    group: "devops"
+    mode: 0600
+
+- name: "Installing mysql client..."
+  apt: >
+    package={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - mysql-client
+  become: true
+  become_user: root
+
+- name: "Creating directory for storing pid file..."
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ufsrv
+    group: devops
+    mode: 0775
+  with_items:
+    - "{{ default_pid_directory }}"
+  become: true
+  become_user: root
+  tags: pid_directory
+
+- name: Configuring rsyslog with ufsrv logging template....
+  blockinfile:
+    dest: /etc/rsyslog.conf
+    marker: "# {mark} ANSIBLE MANAGED UFSRV template"
+    block: |
+      $SystemLogRateLimitInterval 2
+      $SystemLogRateLimitBurst 1000
+      $template {{ ufsrv_server_type }}_logs, "/var/log/%syslogtag%.log"
+    insertbefore: "^#### GLOBAL DIRECTIVES ####"
+  become: true
+  become_user: root
+  tags: ufsrv_rsyslog 
+  when: docker_container is undefined or not docker_container == true
+
+- name: "Installing {{ ufsrv_server_type }} rsyslog config file"
+  template:
+    src: "30-{{ ufsrv_server_type }}.conf.j2"
+    dest: "/etc/rsyslog.d/30-{{ ufsrv_server_type }}.conf"
+  become: true
+  become_user: root
+  notify: [ 'Restart rsyslogd' ]
+  tags: ufsrv_rsyslog
+  when: docker_container is undefined or not docker_container == true
+
+- name: "Installing logrotate config file..."
+  copy:
+    src: "files/etc/logrotate.d/ufsrv"
+    dest: "/etc/logrotate.d/ufsrv"
+    mode: 0644
+    owner: devops
+  become: true
+  become_user: root
+  tags: ufsrv_logrotate
+  when: docker_container is undefined or not docker_container == true
+
+- name: "Installing {{ ufsrv_server_type }} systemd unit file"
+  template: 
+    src: "ufsrv.service.j2"
+    dest: "/etc/systemd/system/{{ ufsrv_server_type }}.service"
+  become: true
+  become_user: root
+  tags: systemd_config
+
+#currently disabled
+- name: "Starting {{ ufsrv_server_type }} service"
+  systemd: 
+    state: started
+    name: "{{ ufsrv_server_type }}.service" 
+    daemon_reload: yes 
+    enabled: true
+  become: true
+  become_user: root
+  when: false or docker_container is undefined or not docker_container == true
+

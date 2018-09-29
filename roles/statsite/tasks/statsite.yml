@@ -1,0 +1,116 @@
+- name: Installing base dev packages
+  apt: >
+    package={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - autotools-dev
+    - autoconf
+    - automake
+    - libtool
+    - make
+
+- name: Create service account for Statsite
+  user: 
+    name: statsite
+    system: no
+    shell: '/bin/false'
+    state: present
+
+- name: Ensure Statsite directories exist
+  file: path="{{ item }}"
+        state=directory
+  with_items:
+    - "{{ statsite_conf_dir }}"
+    - "{{ statsite_sink_dir }}"
+
+- name: Download Statsite
+  get_url: url="https://github.com/armon/statsite/archive/v{{ statsite_version }}.tar.gz"
+           dest="/tmp/statsite-{{ statsite_version }}.tar.gz"
+
+- name: Extract Statsite
+  unarchive: src="/tmp/statsite-{{ statsite_version }}.tar.gz"
+             dest="/tmp"
+             copy=no
+
+- name: "Installing pip package..."
+  apt: >
+    package={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - python-pkg-resources
+    - python-setuptools
+    - python-pip
+
+- name: Install SCons
+  pip: name="SCons"
+       extra_args="--egg --install-option --standard-lib"
+       state=present
+
+#- name: Build Statsite
+#  command: "make"
+#  args:
+#    chdir: "/tmp/statsite-{{ statsite_version }}"
+#    creates: "/tmp/statsite-{{ statsite_version }}/statsite"
+#  register: installed_statsite
+
+- name: "Bootstrapping autobuild environment..."
+  command: "./bootstrap.sh"
+  args:
+    chdir: "/tmp/statsite-{{ statsite_version }}"
+    creates: "/tmp/statsite-{{ statsite_version }}/configure"
+
+- name: "Configuring package..."
+  command: "./configure"
+  args:
+    chdir: "/tmp/statsite-{{ statsite_version }}"
+    creates: "/tmp/statsite-{{ statsite_version }}/Makefile"
+
+- name: "Compiling package statsite..."
+  make:
+    chdir: "/tmp/statsite-{{ statsite_version }}"
+  register: installed_statsite
+
+- name: Copy Statsite executables
+  command: "cp {{ item.src }} {{ item.dest }}"
+  when: installed_statsite|changed
+  with_items:
+    - { src: "/tmp/statsite-{{ statsite_version }}/src/statsite", dest: "{{ statsite_sink_dir }}" }
+    - { src: "/tmp/statsite-{{ statsite_version }}/sinks/cloudwatch.sh", dest: "{{ statsite_sink_dir }}" }
+    - { src: "/tmp/statsite-{{ statsite_version }}/sinks/graphite.py", dest: "{{ statsite_sink_dir }}" }
+    - { src: "/tmp/statsite-{{ statsite_version }}/sinks/influxdb.py", dest: "{{ statsite_sink_dir }}" }
+    - { src: "/tmp/statsite-{{ statsite_version }}/sinks/librato.py", dest: "{{ statsite_sink_dir }}" }
+#  notify:
+#    - Restart Statsite
+
+- name: Configure Statsite
+  template: src=statsite.conf.j2
+            dest="{{ statsite_conf_dir }}/statsite.conf"
+#  notify:
+#    - Restart Statsite
+
+#- name: Configure Statsite service definition
+#  template: src=statsite.conf.j2 dest=/etc/init/statsite.conf
+#  notify:
+#    - Restart Statsite
+#AA
+- name: Installing statsite systemd unit file
+  template: src=statsite.service.j2 dest=/etc/systemd/system/statsite.service
+
+- name: Starting statsite service
+  systemd: 
+    state: started 
+    enabled: true 
+    name: statsite.service 
+    daemon_reload: yes
+  when: docker_container is undefined or not docker_container == true
+
+- name: Touch log file if it does not exist
+  copy: content="" dest="{{ statsite_log }}" force=no
+
+- name: Set log file permissions
+  file: path={{ statsite_log }} owner=statsite group=statsite mode=0644
+
+- name: Configure Statsite log rotation
+  template: src=logrotate_statsite.j2 dest=/etc/logrotate.d/statsite

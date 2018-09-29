@@ -1,0 +1,39 @@
+---
+- name: download archive
+  get_url: >-
+    url={{package_download_url}}
+    dest={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}.tar.gz
+    mode=0644
+
+- name: unarchive/install
+  unarchive: >-
+    copy=no
+    src={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}.tar.gz
+    dest={{ tmp_download_dir }}/
+    creates={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}
+
+- name: "Generating autoconf files for protobuf package {{ package_version }}..."
+  shell: "./autogen.sh"
+  args:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+
+- name: "Configuring protobuf package {{ package_version }}..."
+  shell: "./configure --{{ protobuf_configure_flags|join(' --') }}" 
+  args:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+
+- name: "Compiling protobuf package {{ package_version }}..."
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+
+#- name: "Checking protobuf package {{ package_version }}..."
+#  shell: "make check"
+#  args:
+#    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+#  creates: {{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}/Makefile
+
+- name: "Installing protobuf package {{ package_version }}..."
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+    target: install
+    params:

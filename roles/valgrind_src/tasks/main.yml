@@ -1,0 +1,6 @@
+---
+- include: valgrind_src.yml
+  when: valgrind_src_enabled 
+  become: yes
+  become_user: devops
+  tags: [valgrind_src]

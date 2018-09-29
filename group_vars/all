@@ -1,0 +1,8 @@
+---
+# Global variables
+
+
+tmp_download_dir: /tmp
+base_install_dir: /opt
+
+service_netmask: '255.255.255.0' #network tier providing a logical standalone service eg. db

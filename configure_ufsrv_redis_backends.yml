@@ -1,0 +1,78 @@
+- hosts: all
+  vars_files:
+    - roles/ufsrv_src/defaults/main.yml
+
+  - include: roles/ufsrv_src/tasks/ufsrv_opt.yml
+
+#version 2.4 introduced 'archive' option to facilitate checking out one file
+#https://stackoverflow.com/questions/2466735/how-to-checkout-only-one-file-from-git-repository
+  - name: "Checking out ufsrv src locally..."
+    git:
+      repo: "https://github.com/unfacd/ufsrv.git"
+      dest: "{{ tmp_download_dir }}/{{ package_name }}"
+      accept_hostkey: yes
+      clone: yes
+      version: 'origin/HEAD'
+      force: yes
+      update: yes
+
+  - name: Copying redis scripts...
+    copy:
+      src: "{{ tmp_download_dir }}/{{ package_name }}/ufsrv/etc/redis/{{ item.src }}"
+      dest: "/opt/ufsrv/bin/{{ item.dest }}"
+      remote_src: yes
+      mode: 0644
+      owner: devops
+      group: devops
+    with_items:
+      - { src: 'redis_id_generation.lua', dest: 'redis_id_generation.lua' }
+      - { src: 'redis_delete_lock.lua', dest: 'redis_delete_lock.lua' }
+    tags: ufsrv_redis_scripts
+
+  - name: "Loading redis 'redis_id_generation' scripts..."
+    shell: redis-cli -h {{ hostvars[inventory_hostname].private_ip }} SCRIPT LOAD "$(cat /opt/ufsrv/bin/redis_id_generation.lua)"
+    register: script_sha1
+    tags: load_redis_scripts
+  - debug: var=script_sha1.stdout_lines
+
+  - name: "Loading redis 'redis_delete_lock.lua' scripts..."
+    shell: redis-cli -h {{ hostvars[inventory_hostname].private_ip }} SCRIPT LOAD "$(cat /opt/ufsrv/bin/redis_delete_lock.lua)"
+    register: script_sha1_redis_delete_lock
+    tags: load_redis_scripts
+  - debug: var=script_sha1_redis_delete_lock.stdout_lines
+
+  - name: "Configuring redis_post_startup service"
+    template:
+      src: ./templates/systemd/system/redis_post_startup.service.j2
+      dest: /etc/systemd/system/redis_post_startup.service
+      owner: devops
+      group: root
+      mode: 0644
+    tags: ufsrv_redis_scriptss
+
+  - name: "Copying redis loading script to run on system startup"
+    template:
+      src: ./templates/opt/ufsrv/bin/redis_post_startup.sh.j2
+      dest: /opt/ufsrv/bin/redis_post_startup.sh
+      owner: devops
+      group: root
+      mode: 0750
+    tags: ufsrv_redis_scriptss
+
+  - name: "Starting redis_post_startup service"
+    systemd:
+      state: started
+      name: "redis_post_startup.service"
+      daemon_reload: no
+      enabled: true
+    tags: ufsrv_redis_scriptss
+  
+#turn on when ready (remove 1>2)
+  - name: Cleaning up ufsrv repo...
+    file: 
+      path: "{{ tmp_download_dir }}/{{ item }}" 
+      state: absent
+    with_items:
+      - "{{ package_name }}"
+    when: 1 > 2
+

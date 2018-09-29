@@ -1,0 +1,3 @@
+---
+- include: ufsrvbuild_devpackages.yml
+  tags: [ufsrvbuild_devpackages]

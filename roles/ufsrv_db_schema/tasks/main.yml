@@ -1,0 +1,5 @@
+---
+- include: ufsrv_db_schema.yml
+  when: ufsrv_db_schema_enabled
+  tags: [ufsrv_db_schema]
+

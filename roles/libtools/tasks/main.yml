@@ -1,0 +1,18 @@
+- name: Installing libtool and ldconfig packages
+  apt: >
+    package={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - libtool
+    - pkg-config
+
+- stat: path=/etc/ld.so.conf.d/opt.lib.conf
+  register: ld_path
+
+- name: Creating local lib cash file for ldconfig
+  file: path=/etc/ld.so.conf.d/opt.lib.conf state=touch owner=devops group=devops mode=0755
+  when: ld_path.stat.exists==False
+
+- name: Adding /opt/lib in ld path
+  lineinfile: dest=/etc/ld.so.conf.d/opt.lib.conf state=present regexp="^\/opt\/lib" line="/opt/lib"

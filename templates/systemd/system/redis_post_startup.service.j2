@@ -1,0 +1,11 @@
+[Unit]
+Description=Load redis scripts
+After=redis_{{ redis_service_port }}.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=false
+ExecStart=/opt/ufsrv/bin/redis_post_startup.sh
+
+[Install]
+WantedBy=multi-user.target

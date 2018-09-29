@@ -1,0 +1,4 @@
+---
+- include: mysql_create_user.yml
+  when: mysql_create_user_enabled 
+  tags: [mysql_create_user]

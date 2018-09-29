@@ -1,0 +1,24 @@
+- name: Downloading freegeoip
+  get_url: url={{ package_download_url }}
+             dest={{ tmp_download_dir }}/freegeoip.tgz
+             owner=root
+             group=root
+             mode=0600
+  register: freegeoip_download
+
+- name: Ensure freegeoip directory exists
+  file: path={{ base_install_dir }}/freegeoip
+        state=directory
+        owner=root
+        group=root
+        mode=0700
+
+- name: Unpack freegeoip
+  command: tar zxf {{ tmp_download_dir }}/freegeoip.tgz -C {{ base_install_dir }}/freegeoip --strip-components=1
+  when: freegeoip_download.changed
+
+- name: Installing freegeoip systemd unit file
+  template: src=freegeoip.service.j2 dest=/etc/systemd/system/freegeoip.service
+
+- name: Starting freegeoip service
+  systemd: state=started name=freegeoip.service daemon_reload=yes

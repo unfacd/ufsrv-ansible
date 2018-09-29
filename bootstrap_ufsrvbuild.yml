@@ -1,0 +1,19 @@
+#docker run -it --link ufsrv_build -v /home/devops/.ssh/key_devops_docker:/root/.ssh/key_devops_docker -v /home/devops/ansible:/ansible/playbooks ansible_controller -i hosts_build  --private-key=/root/.ssh/key_devops_docker bootstrap_ufsrvbuild.yml
+#
+---
+- hosts: build
+  remote_user: devops
+  become: yes
+  become_user: root
+  gather_facts: false
+  pre_tasks:
+    - raw: apt-get update
+    - raw: sudo apt-get -y install python-minimal
+    - action: setup
+
+  vars:
+
+  roles:
+    - role: libtools
+    - role: bootstrap_ufsrvbuild
+    - { role: ufsrvbuild_devpackages }

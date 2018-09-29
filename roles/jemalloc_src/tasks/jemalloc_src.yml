@@ -1,0 +1,31 @@
+---
+- name: Ensure download directory is present
+  file: path={{ tmp_download_dir }} state=directory
+
+- name: Ensure target install directory 'include' is present
+  file: path={{ base_install_dir }}/include state=directory
+
+- name: Ensure target install directory 'lib' is present
+  file: path={{ base_install_dir }}/lib state=directory
+
+- name: Download jemalloc release
+  unarchive:
+    src: "{{ package_git_url }}"
+    dest: "{{ tmp_download_dir }}"
+    remote_src: yes
+    mode: "u=rwx,g=rx,o="
+    creates: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+
+- name: configure jemalloc
+  command: ./configure --prefix={{ base_install_dir }}
+  args:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+
+- name: Build the default target for jemalloc
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+
+- name: Build the `install` target for jemalloc
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+    target: install

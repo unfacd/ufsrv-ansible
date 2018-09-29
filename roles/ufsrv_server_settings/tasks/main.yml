@@ -1,0 +1,5 @@
+---
+- include: ufsrv_server_settings.yml
+  when: ufsrv_server_settings_enabled
+  tags: [ufsrv_server_settings]
+

@@ -1,0 +1,13 @@
+---
+protobuf_enabled: yes
+tmp_download_dir: '/tmp'
+base_install_dir: '/opt'
+package_version: '3.3.1'
+package_name: 'protobuf'
+package_download_url: https://github.com/google/protobuf/archive/v3.3.1.tar.gz
+protoc_install_dir: /opt
+protobuf_configure_flags:
+  - prefix=/opt
+
+
+

@@ -1,0 +1,33 @@
+---
+- name: Ensure download directory is present
+  file: path={{ tmp_download_dir }} state=directory
+
+- name: Ensure target install directory 'include' is present
+  file: path={{ base_install_dir }}/include state=directory
+
+- name: Ensure target install directory 'lib' is present
+  file: path={{ base_install_dir }}/lib state=directory
+
+- name: "Pulling the utf8proc package {{ package_version }}..."
+  git: 
+    repo: "{{ package_git_url }}" 
+    dest: "{{ tmp_download_dir }}/{{ package_name }}"
+    force: yes
+
+- name: "Compiling utf8proc package {{ package_version }}..."
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}"
+
+- name: Changing install location in makefile
+  lineinfile:
+    dest: '{{ tmp_download_dir }}/{{ package_name }}/Makefile'
+    regexp: "^prefix=/usr/local"
+    line: "prefix=/opt"
+    state: present
+
+- name: "Installing utf8proc package {{ package_version }}..."
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}"
+    target: install
+    params:
+

@@ -1,0 +1,6 @@
+openssl_src_enabled: yes
+tmp_download_dir: /tmp
+base_install_dir: /opt
+package_name: openssl
+package_version: 1.0.2l
+package_download_url: https://www.openssl.org/source/openssl-1.0.2l.tar.gz

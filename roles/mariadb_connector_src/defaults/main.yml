@@ -1,0 +1,7 @@
+---
+mariadb_connector_src_enabled: yes
+tmp_download_dir: "/tmp"
+base_install_dir: '/opt'
+package_name: 'mariadb-connector-c'
+package_version: "3.0.6"
+package_download_url: "https://downloads.mariadb.com/Connectors/c/connector-c-{{ package_version }}/mariadb-connector-c-{{ package_version }}-linux-x86_64.tar.gz" 

@@ -1,0 +1,15 @@
+mysql_create_user_enabled: yes
+# Define additional MySQL users
+mariadb_mysql_users: []
+#   - name: example
+#     hosts:
+#       - "%"
+#       - "127.0.0.1"
+#       - "::1"
+#       - "localhost"
+#     password: secret
+#     encrypted: no (default)
+#     priv: *.*:USAGE (default}
+#     state: present (default)
+#     append_privs: no (default)
+

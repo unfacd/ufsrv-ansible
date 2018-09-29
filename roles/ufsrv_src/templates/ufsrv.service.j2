@@ -1,0 +1,15 @@
+[Unit]
+Description={{ ufsrv_server_type }} daemon service
+After=syslog.service
+
+[Service]
+User=ufsrv
+Type=notify
+ExecStart={{ base_install_dir }}/ufsrv/bin/ufsrv {{ ufsrv_commandline_params | join(" ") }}
+PIDFile={{ default_pid_directory }}/{{ ufsrv_server_type }}.pid
+#ExecStop=/bin/kill -SIGTERM $MAINPID
+#Restart=always
+TimeoutSec=30
+
+[Install]
+WantedBy=multi-user.target

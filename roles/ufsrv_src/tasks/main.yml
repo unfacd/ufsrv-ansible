@@ -1,0 +1,5 @@
+---
+- include: ufsrv_src.yml
+  become: yes
+  become_user: devops
+  tags: [ufsrv_src]

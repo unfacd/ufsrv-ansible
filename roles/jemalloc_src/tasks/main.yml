@@ -1,0 +1,6 @@
+---
+- include: jemalloc_src.yml
+  when: jemalloc_src_enabled 
+  become: yes
+  become_user: devops
+  tags: [jemalloc_src]

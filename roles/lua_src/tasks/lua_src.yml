@@ -1,0 +1,48 @@
+---
+- name: Ensure download directory is present
+  file: path={{ tmp_download_dir }} state=directory
+
+- name: Ensure target install directory 'include' is present
+  file: path={{ base_install_dir }}/include state=directory
+
+- name: Ensure target install directory 'lib' is present
+  file: path={{ base_install_dir }}/lib state=directory
+
+- name: Installing required packages to compile Lua from source
+  become: yes
+  become_user: root
+  apt: >
+    package={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - libreadline-dev
+
+- name: Downloading lua package {{ package_version }}...
+  get_url: url={{ package_download_url }} dest={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}.tar.gz
+
+- name: Unpacking lua package {{ package_version }} source files
+  unarchive:
+    copy: no
+    src: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}.tar.gz"
+    dest: "{{ tmp_download_dir }}/"
+
+- name: "Compiling lua package {{ package_version }}..."
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+    target: linux
+    params:
+
+- name: Changing install location in makefile
+  lineinfile:
+    dest: '{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}/Makefile'
+    regexp: "^INSTALL_TOP= /usr/local"
+    line: "INSTALL_TOP= /opt"
+    state: present
+
+- name: "Installing lua package {{ package_version }}..."
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+    target: install
+    params:
+

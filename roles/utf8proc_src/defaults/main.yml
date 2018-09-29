@@ -1,0 +1,7 @@
+---
+utf8proc_src_enabled: yes
+package_name: utf8proc
+tmp_download_dir: /tmp
+base_install_dir: /opt
+package_git_url: https://github.com/JuliaLang/utf8proc
+package_version: "5.3.4"

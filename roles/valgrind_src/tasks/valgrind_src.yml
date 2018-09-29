@@ -1,0 +1,36 @@
+---
+- name: "Downloading valgrind package {{ package_version }}..."
+  get_url: >-
+    url={{package_download_url}}
+    dest={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}.tar.bz2
+    mode=0644
+
+- name: "Unarchiving valgrind package {{ package_version }}..."
+  unarchive: >-
+    copy=no
+    src={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}.tar.bz2
+    dest={{ tmp_download_dir }}/
+    creates={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}
+
+#- name: "Generating autoconf files for valgrind package {{ package_version }}..."
+#  shell: "./autogen.sh"
+#  args:
+#    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+
+- name: "Configuring valgrind package {{ package_version }}..."
+  shell: "./configure --{{ package_configure_flags|join(' --') }}" 
+  args:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+
+- name: "Compiling valgrind package {{ package_version }}..."
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+
+- name: "Installing valgrind package {{ package_version }}..."
+  make:
+    chdir: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}"
+    target: install
+    params:
+
+- name: "Installing libc with debug info"
+  package: name=libc6-dbg state=latest

@@ -1,0 +1,12 @@
+---
+valgrind_src_enabled: yes
+package_name: 'valgrind'
+tmp_download_dir: '/tmp'
+base_install_dir: '/opt'
+package_version: '3.13.0'
+package_download_url: 'ftp://sourceware.org/pub/valgrind/valgrind-3.13.0.tar.bz2'
+package_configure_flags:
+  - prefix=/opt
+
+
+

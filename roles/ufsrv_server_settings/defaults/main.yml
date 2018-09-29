@@ -1,0 +1,2 @@
+ufsrv_server_settings_enabled: yes
+network_interface_up_file: '/etc/network/if-up.d/ufsrv'

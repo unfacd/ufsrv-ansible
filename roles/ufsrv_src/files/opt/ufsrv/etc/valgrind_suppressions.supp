@@ -1,0 +1,19 @@
+#http://valgrind.org/docs/manual/mc-manual.html#mc-manual.suppfiles
+#also chech /opt/lib/valgring/default.supp
+#valgrind --vgdb=yes --vgdb-error=0 --log-fd=1  --read-inline-info=yes --show-reachable=yes  --time-stamp=yes --track-origins=yes --read-var-info=yes --suppressions=/opt/ufsrv/etc/valgrind_suppressions.supp /opt/ufsrv/bin/ufsrv -i 1 -c /opt/ufsrv/etc -f ufsrv.lua -s ufsrv -d 0 |less
+{
+   mysql_connector cond
+   Memcheck:Cond
+   ...
+   obj:/opt/lib/libmysqlclient.so.18.*
+   ...
+}
+
+{
+   mysql_connector uninitialised
+   Memcheck:Addr4
+   ...
+   obj:/opt/lib/libmysqlclient.so.18.*
+   ...
+}
+

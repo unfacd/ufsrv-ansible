@@ -1,0 +1,6 @@
+---
+- include: protobuf.yml
+  when: protobuf_enabled 
+  become: yes
+  become_user: devops
+  tags: [protobuf]

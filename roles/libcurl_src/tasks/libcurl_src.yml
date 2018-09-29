@@ -1,0 +1,140 @@
+---
+
+- name: "CURL | Set to Source release by default"
+  set_fact:
+    curl_buildfromgit: False
+  when: curl_buildfromgit is undefined
+
+- name: "CURL | Set version to master"
+  set_fact:
+    curl_version: "master"
+  when: curl_buildfromgit
+
+- name: "CURL | Set path to default"
+  set_fact:
+    curl_path: "/tmp"
+  when: curl_path is undefined
+
+- name: "CURL | Set archive type to default"
+  set_fact:
+    curl_extension: "tar.gz"
+  when: curl_extension is undefined
+
+- name: "CURL | Get current version"
+#  shell: curl --version | cat
+  shell: (curl --version 2>/dev/null || echo ,,0.1) | awk '/curl/{print $1, $2}'
+  register: curl_version_before
+  changed_when: '"curl curl_version" != curl_version_before.stdout'
+
+- name: "CURL | create directory"
+  file:
+    path: "{{ curl_path }}/curl/curl-{{ curl_version }}"
+    state: directory
+    mode: 0777
+  when: '"curl curl_version" != curl_version_before.stdout'
+
+- name: "CURL | Download from git"
+  get_url:
+    url: "https://github.com/curl/curl/archive/{{ curl_version }}.{{ curl_extension }}"
+    dest: "{{ curl_path }}/curl/{{ curl_version }}.{{ curl_extension }}"
+    remote_src: yes
+    validate_certs: False
+  when: 'curl_version == "master"'
+
+- name: "CURL | Download from source"
+  get_url:
+    url: "https://curl.haxx.se/download/curl-{{ curl_version }}.{{ curl_extension }}"
+    dest: "{{ curl_path }}/curl/{{ curl_version }}.{{ curl_extension }}"
+    remote_src: yes
+    validate_certs: False
+  when: '"curl curl_version" != curl_version_before.stdout'
+
+# Note: requires GNU-Tar &&|| unzip
+- name: "CURL | Unarchive"
+  unarchive:
+    src: "{{ curl_path }}/curl/{{ curl_version }}.{{ curl_extension }}"
+    dest: "{{ curl_path }}/curl/"
+    creates: "{{ curl_path }}/curl/curl-{{ curl_version }}/README"
+    remote_src: yes
+  when: '"curl curl_version" != curl_version_before.stdout'
+
+- name: "CURL | Build Configuration"
+  shell: "./buildconf"
+  args:
+    chdir: "{{ curl_path }}/curl/curl-{{ curl_version }}"
+  when: 'curl_version == "master"'
+
+- name: "CURL | Configure without flags"
+  shell: "./configure"
+  args:
+    chdir: "{{ curl_path }}/curl/curl-{{ curl_version }}"
+  when: 'curl_configure_flags.0 is undefined and "curl curl_version" != curl_version_before.stdout'
+
+#env var are needed for compiling satic, custom location openssl
+- name: "CURL | Configure with flags"
+  shell: "./configure --{{ curl_configure_flags|join(' --') }}"
+  environment:
+    LDFLAGS: "-L/opt/lib"
+    CPPFLAGS: "-I/opt/include"
+    LIBS: "-ldl"
+    PKG_CONFIG_PATH: "/opt/lib"
+  args:
+    chdir: "{{ curl_path }}/curl/curl-{{ curl_version }}"
+  when: 'curl_configure_flags.0 is defined and "curl curl_version" != curl_version_before.stdout'
+
+# @TODO Use make module
+#- name: "CURL | Make"
+#  shell: "make"
+#  args:
+#    chdir: "{{ curl_path }}/curl/curl-{{ curl_version }}"
+#  when: '"curl curl_version" != curl_version_before.stdout_lines'
+
+- name: "CURL | Make"
+  make:
+    chdir: "{{ curl_path }}/curl/curl-{{ curl_version }}"
+  when: '"curl curl_version" != curl_version_before.stdout'
+
+# @TODO Use make module, make it optional via variable, and implement.
+#- name: "CURL | Make (Test)"
+#  become: yes
+#  become_user: root
+#  make test (optional)
+
+# @TODO Use make module
+#- name: "CURL | Install"
+#  shell: "make install"
+#  args:
+#    chdir: "{{ curl_path }}/curl/curl-{{ curl_version }}"
+#  when: '"curl curl_version" != curl_version_before.stdout_lines'
+
+- name: "CURL | Make"
+  make:
+    chdir: "{{ curl_path }}/curl/curl-{{ curl_version }}"
+    target: install
+  when: '"curl curl_version" != curl_version_before.stdout'
+
+- name: "CURL | Get current version 1/2"
+  shell: (/opt/bin/curl --version 2>/dev/null || echo ,,0.1) | awk '/curl/{print $1, $2}'
+  register: curl_version_after
+  changed_when: false
+  when: curl_configure_flags is defined and "prefix=/opt" in curl_configure_flags
+
+- name: "CURL | Verify current version 2/2"
+  assert:
+    that: '"curl {{ curl_version }}" == "{{ curl_version_after.stdout }}"'
+  when:
+    - curl_version != "master"
+    - curl_version_after is defined
+
+- name: "CURL | Verify current version 2/2(master)"
+  assert:
+    that: '"-DEV" in "{{ curl_version_after.stdout_lines }}"'
+  when:
+    - curl_version == "master"
+    - curl_version_after is defined
+
+#- name: "CURL | Cleaning"
+#  file:
+#    path: "{{ curl_path }}/curl"
+#    state: absent
+#  when: '"curl curl_version" != curl_version_before.stdout_lines'

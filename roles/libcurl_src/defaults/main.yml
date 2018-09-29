@@ -1,0 +1,22 @@
+---
+libcurl_src_enabled: yes
+curl_version: "7.54.0"
+curl_configure_flags:
+  - disable-shared
+  - with-ssl
+  - enable-static 
+  - prefix=/opt 
+  - disable-ldap 
+  - disable-sspi 
+  - without-librtmp 
+  - disable-ftp 
+  - disable-file 
+  - disable-dict 
+  - disable-telnet 
+  - disable-tftp 
+  - disable-pop3 
+  - disable-imap 
+  - disable-smtp 
+  - disable-gopher 
+  - disable-smb 
+  - without-libidn

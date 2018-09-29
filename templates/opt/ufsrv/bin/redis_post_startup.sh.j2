@@ -1,0 +1,14 @@
+#!/bin/sh
+CLIEXEC=/usr/bin/redis-cli
+
+{% raw %}
+#each instance must have a unique number to facilitate unique network-wide id generation
+#INSTANCE_ID=0
+{% endraw %}
+INSTANCE_ID="{{ redis_instance_id }}"
+REDISPORT="{{ redis_service_port }}"
+REDISHOST="{{ hostvars[inventory_hostname].private_ip }}"
+$CLIEXEC -h $REDISHOST -p $REDISPORT SET icicle-generator-logical-shard-id $INSTANCE_ID
+$CLIEXEC -h $REDISHOST -p $REDISPORT SCRIPT LOAD "$(cat /opt/ufsrv/bin/redis_id_generation.lua)"
+$CLIEXEC -h $REDISHOST -p $REDISPORT SCRIPT LOAD "$(cat /opt/ufsrv/bin/redis_delete_lock.lua)"
+

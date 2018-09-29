@@ -1,0 +1,18 @@
+- name: Creating ufsrv group
+  group: name=ufsrv system=no state=present
+
+- name: Adding ufrsv user...
+  user: name=ufsrv  groups=ufsrv shell=/bin/false comment="Ufsrv user"
+
+- name: "Creating ufsrv opt directory..."
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: ufsrv
+    group: devops
+    mode: 0775
+  with_items:
+    - "{{ base_install_dir }}/ufsrv/etc"
+    - "{{ base_install_dir }}/ufsrv/bin"
+  ignore_errors: true
+

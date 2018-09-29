@@ -1,0 +1,9 @@
+---
+- name: cmake | Install cmake
+  action: "apt name={{ item }} update_cache=yes state=present"
+  with_items:
+   - cmake{{ cmake_version }}
+
+- name: cmake | Install required packages
+  action: "apt state=present name={{ item }}"
+  with_items: "{{ cmake_package_list }}"

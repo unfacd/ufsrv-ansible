@@ -1,0 +1,6 @@
+json_c_src_enabled: yes
+tmp_download_dir: /tmp
+base_install_dir: /opt
+package_name: json-c
+package_version: 0.13.1
+package_download_url: https://s3.amazonaws.com/json-c_releases/releases/json-c-{{ package_version }}.tar.gz

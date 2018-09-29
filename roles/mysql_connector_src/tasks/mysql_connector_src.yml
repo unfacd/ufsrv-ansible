@@ -1,0 +1,26 @@
+---
+#https://dev.mysql.com/doc/connector-c/en/connector-c-installation-source-unix.html
+- name: Ensure download directory is present
+  file: path={{ tmp_download_dir }} state=directory
+
+- name: Ensure target install directory 'include' is present
+  file: path={{ base_install_dir }}/include state=directory
+
+- name: Ensure target install directory 'lib' is present
+  file: path={{ base_install_dir }}/lib state=directory
+
+- name: Downloading MySQL Connector package {{ package_version }}...
+  get_url: url={{ package_download_url }} dest={{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}.tar.gz
+
+- name: Unpacking MySQL Connector package {{ package_version }} source files
+  unarchive: 
+    copy: no 
+    src: "{{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}.tar.gz" 
+    dest: "{{ tmp_download_dir }}/"
+
+#(NOT VALID) important if valgring is required, add the following:-DWITH_VALGRIND=ON -DWITH_ASAN=ON -DCMAKE_C_FLAGS=-I/opt/include
+- name: Configuring and making MySQL Connector package...
+  shell: cd {{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}-src && cmake -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX={{ base_install_dir }} && make creates={{ base_install_dir }}/lib/libmysql/libmysqlclient.a 
+
+- name: Installing MySQL Connector package {{ package_version }}
+  shell: cd {{ tmp_download_dir }}/{{ package_name }}-{{ package_version }}-src  &&  make install creates={{ base_install_dir }}/lib/libmysqlclient.a

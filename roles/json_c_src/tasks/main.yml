@@ -1,0 +1,6 @@
+---
+- include: json_c_src.yml
+  when: json_c_src_enabled 
+  become: yes
+  become_user: devops
+  tags: [json_c_src]

@@ -1,0 +1,6 @@
+---
+- include: openssl_src.yml
+  when: openssl_src_enabled 
+  become: yes
+  become_user: devops
+  tags: [openssl_src]

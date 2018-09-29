@@ -1,0 +1,6 @@
+---
+- include: mysql_connector_src.yml
+  when: mysql_connector_src_enabled 
+  become: yes
+  become_user: devops
+  tags: [mysql_connector_src]

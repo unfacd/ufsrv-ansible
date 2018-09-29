@@ -1,0 +1,6 @@
+---
+- include: libcurl_src.yml
+  when: libcurl_src_enabled 
+  become: yes
+  become_user: devops
+  tags: [libcurl_src]

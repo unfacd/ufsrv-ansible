@@ -1,0 +1,72 @@
+
+- name: Installing base dev packages
+  apt: >
+    package={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - libpthread-stubs0-dev
+    - libsystemd-dev
+    - autotools-dev
+    - autoconf
+    - automake
+    - libtool
+    - make
+    - texinfo
+
+- include_role:
+    name: libtools
+
+- include_role:
+    name: gcc
+  vars:
+    gcc_version: 8
+
+- include_role:
+    name: gdb_src
+  vars:
+    package_version: '8.1'
+
+- include_role:
+    name: cmake
+
+- include_role:
+    name: valgrind_src
+  vars:
+    package_version: '3.13.0'
+
+- include_role:
+    name: openssl_src
+  vars:
+    package_version: '1.0.2l'
+
+- include_role:
+    name: libcurl_src
+  vars:
+    curl_version: '7.54.0'
+
+- include_role:
+    name: mysql_connector_src
+  vars:
+    package_version: '6.1.11'
+
+- include_role:
+    name: json_c_src
+  vars:
+    package_version: '0.13.1'
+
+- include_role:
+    name: protobuf
+  vars:
+    package_version: '3.3.1'
+
+- include_role:
+    name: lua_src
+  vars:
+    package_version: '5.3.4' 
+
+- include_role:
+    name: utf8proc_src
+
+- include_role:
+    name: jemalloc_src

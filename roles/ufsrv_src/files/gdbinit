@@ -1,0 +1,17 @@
+set history save
+set history filename ~/.gdb_history
+set print array on
+set print pretty on
+handle SIGPIPE nostop
+
+#valgrind alias for uninitialised var (https://heeris.id.au/2016/valgrind-gdb/)
+define wat
+  eval "monitor get_vbits %p %d", &$arg0, sizeof($arg0)
+end
+
+define lolwat
+  eval "monitor get_vbits %p %d", &$arg0, $arg1
+end
+
+#thread apply all bt <-- all threads
+#- or wh <-- visual editor
